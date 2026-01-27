@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>市场分析 - CryptoMarket</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a1f2e 100%);
+            min-height: 100vh;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #f7931a 0%, #00d4aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .card-glow {
+            box-shadow: 0 0 20px rgba(247, 147, 26, 0.1);
+            border: 1px solid rgba(247, 147, 26, 0.2);
+        }
+        
+        .pulse-glow {
+            animation: pulse-glow 2s infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(247, 147, 26, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(247, 147, 26, 0.6); }
+        }
+        
+        .fade-in {
+            opacity: 0;
+        }
+        
+        .nav-link:hover {
+            color: #f7931a;
+            transition: color 0.3s ease;
+        }
+        
+        .chart-container {
+            background: rgba(26, 31, 46, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, rgba(247, 147, 26, 0.1) 0%, rgba(0, 212, 170, 0.1) 100%);
+            border: 1px solid rgba(247, 147, 26, 0.2);
+        }
+        
+        .analysis-tab {
+            transition: all 0.3s ease;
+        }
+        
+        .analysis-tab.active {
+            background: linear-gradient(135deg, #f7931a 0%, #00d4aa 100%);
+            color: white;
+        }
+        
+        .portfolio-item {
+            border-left: 4px solid #f7931a;
+        }
+        
+        .correlation-matrix {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+        }
+        
+        .correlation-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- 导航栏 -->
+    <nav class="bg-gray-900 bg-opacity-90 backdrop-blur-md fixed w-full top-0 z-50 border-b border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-r from-yellow-400 to-green-400 rounded-full flex items-center justify-center">
+                        <span class="text-black font-bold text-sm">₿</span>
+                    </div>
+                    <span class="text-xl font-bold gradient-text">CryptoMarket</span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="nav-link text-gray-300 hover:text-white">行情首页</a>
+                    <a href="coins.html" class="nav-link text-gray-300 hover:text-white">币种详情</a>
+                    <a href="exchanges.html" class="nav-link text-gray-300 hover:text-white">交易所</a>
+                    <a href="analytics.html" class="nav-link text-white font-medium">市场分析</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="w-2 h-2 bg-green-400 rounded-full pulse-glow"></div>
+                    <span class="text-sm text-gray-400">实时更新</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
+        <!-- 页面标题 -->
+        <section class="mb-8 fade-in">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold gradient-text mb-4">市场分析</h1>
+                <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                    深度分析加密货币市场趋势，提供专业的投资洞察和数据可视化
+                </p>
+            </div>
+        </section>
+
+        <!-- 市场概览 -->
+        <section class="mb-8 fade-in">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="metric-card rounded-xl p-6 text-center">
+                    <div class="text-gray-400 text-sm mb-2">总市值</div>
+                    <div class="text-2xl font-bold text-white">$3.24T</div>
+                    <div class="text-green-400 text-sm">+2.34%</div>
+                </div>
+                <div class="metric-card rounded-xl p-6 text-center">
+                    <div class="text-gray-400 text-sm mb-2">24h交易量</div>
+                    <div class="text-2xl font-bold text-white">$89.5B</div>
+                    <div class="text-red-400 text-sm">-1.23%</div>
+                </div>
+                <div class="metric-card rounded-xl p-6 text-center">
+                    <div class="text-gray-400 text-sm mb-2">BTC占比</div>
+                    <div class="text-2xl font-bold text-white">62.1%</div>
+                    <div class="text-green-400 text-sm">+0.5%</div>
+                </div>
+                <div class="metric-card rounded-xl p-6 text-center">
+                    <div class="text-gray-400 text-sm mb-2">市场情绪</div>
+                    <div class="text-2xl font-bold text-green-400">牛市</div>
+                    <div class="text-gray-400 text-sm">72/100</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 分析工具选项卡 -->
+        <section class="mb-8 fade-in">
+            <div class="bg-gray-800 rounded-xl p-6 card-glow">
+                <div class="flex flex-wrap gap-3 mb-6">
+                    <button class="analysis-tab active px-6 py-3 rounded-lg bg-gray-700 text-white font-medium" data-analysis="market-cap">
+                        市值分布
+                    </button>
+                    <button class="analysis-tab px-6 py-3 rounded-lg bg-gray-700 text-white font-medium" data-analysis="correlation">
+                        相关性分析
+                    </button>
+                    <button class="analysis-tab px-6 py-3 rounded-lg bg-gray-700 text-white font-medium" data-analysis="volatility">
+                        波动率分析
+                    </button>
+                    <button class="analysis-tab px-6 py-3 rounded-lg bg-gray-700 text-white font-medium" data-analysis="portfolio">
+                        投资组合
+                    </button>
+                </div>
+                
+                <!-- 市值分布图表 -->
+                <div id="market-cap-analysis" class="analysis-content">
+                    <div class="chart-container rounded-lg p-4 mb-6">
+                        <div id="market-cap-chart" style="height: 400px;"></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <h4 class="text-white font-semibold mb-2">市场集中度</h4>
+                            <p class="text-gray-300 text-sm">
+                                前10大加密货币占总市值的85%以上，显示市场高度集中。
+                                比特币单独占比超过60%，体现了其在市场中的主导地位。
+                            </p>
+                        </div>
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <h4 class="text-white font-semibold mb-2">新兴币种</h4>
+                            <p class="text-gray-300 text-sm">
+                                除了主流币种外，新兴的山寨币和DeFi代币正在获得市场份额，
+                                为投资者提供了更多样化的选择。
+                            </p>
+                        </div>
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <h4 class="text-white font-semibold mb-2">投资建议</h4>
+                            <p class="text-gray-300 text-sm">
+                                建议采用分散投资策略，在持有主流币种的同时，
+                                适当配置有潜力的新兴项目以降低风险。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 相关性分析 -->
+                <div id="correlation-analysis" class="analysis-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="chart-container rounded-lg p-4">
+                            <h4 class="text-white font-semibold mb-4">币种价格相关性矩阵</h4>
+                            <div class="correlation-matrix mb-4">
+                                <!-- 相关性矩阵将在这里生成 -->
+                            </div>
+                            <div class="text-sm text-gray-400">
+                                数值越接近1表示相关性越强，越接近0表示相关性越弱
+                            </div>
+                        </div>
+                        <div class="space-y-6">
+                            <div class="bg-gray-700 rounded-lg p-4">
+                                <h4 class="text-white font-semibold mb-2">高度相关对</h4>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-300">BTC - WBTC</span>
+                                        <span class="text-green-400">0.98</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-300">ETH - stETH</span>
+                                        <span class="text-green-400">0.95</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-300">ADA - DOT</span>
+                                        <span class="text-yellow-400">0.72</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-4">
+                                <h4 class="text-white font-semibold mb-2">低度相关对</h4>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-300">BTC - DOGE</span>
+                                        <span class="text-yellow-400">0.23</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-300">ETH - TRX</span>
+                                        <span class="text-red-400">0.15</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-300">SOL - XRP</span>
+                                        <span class="text-red-400">0.08</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 波动率分析 -->
+                <div id="volatility-analysis" class="analysis-content hidden">
+                    <div class="chart-container rounded-lg p-4 mb-6">
+                        <div id="volatility-chart" style="height: 400px;"></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <h4 class="text-white font-semibold mb-2">高波动币种</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300">DOGE</span>
+                                    <span class="text-red-400">89.2%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300">SHIB</span>
+                                    <span class="text-red-400">95.7%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300">SOL</span>
+                                    <span class="text-yellow-400">67.3%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <h4 class="text-white font-semibold mb-2">中等波动币种</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300">ETH</span>
+                                    <span class="text-yellow-400">45.8%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300">BNB</span>
+                                    <span class="text-yellow-400">52.1%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300">ADA</span>
+                                    <span class="text-yellow-400">48.6%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <h4 class="text-white font-semibold mb-2">低波动币种</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300">BTC</span>
+                                    <span class="text-green-400">32.4%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300">USDT</span>
+                                    <span class="text-green-400">2.1%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300">USDC</span>
+                                    <span class="text-green-400">1.8%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 投资组合工具 -->
+                <div id="portfolio-analysis" class="analysis-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="chart-container rounded-lg p-4">
+                            <h4 class="text-white font-semibold mb-4">投资组合配置</h4>
+                            <div id="portfolio-chart" style="height: 300px;"></div>
+                        </div>
+                        <div class="space-y-4">
+                            <h4 class="text-white font-semibold">建议投资组合</h4>
+                            <div class="space-y-3">
+                                <div class="portfolio-item bg-gray-700 rounded-lg p-4 pl-6">
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                                                <span class="text-black font-bold text-sm">B</span>
+                                            </div>
+                                            <span class="text-white font-medium">Bitcoin (BTC)</span>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-white font-bold">40%</div>
+                                            <div class="text-gray-400 text-sm">$40,000</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="portfolio-item bg-gray-700 rounded-lg p-4 pl-6">
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                                <span class="text-white font-bold text-sm">E</span>
+                                            </div>
+                                            <span class="text-white font-medium">Ethereum (ETH)</span>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-white font-bold">25%</div>
+                                            <div class="text-gray-400 text-sm">$25,000</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="portfolio-item bg-gray-700 rounded-lg p-4 pl-6">
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                                                <span class="text-white font-bold text-sm">S</span>
+                                            </div>
+                                            <span class="text-white font-medium">Solana (SOL)</span>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-white font-bold">15%</div>
+                                            <div class="text-gray-400 text-sm">$15,000</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="portfolio-item bg-gray-700 rounded-lg p-4 pl-6">
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                                                <span class="text-white font-bold text-sm">A</span>
+                                            </div>
+                                            <span class="text-white font-medium">Cardano (ADA)</span>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-white font-bold">10%</div>
+                                            <div class="text-gray-400 text-sm">$10,000</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="portfolio-item bg-gray-700 rounded-lg p-4 pl-6">
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                                                <span class="text-white font-bold text-sm">D</span>
+                                            </div>
+                                            <span class="text-white font-medium">其他币种</span>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-white font-bold">10%</div>
+                                            <div class="text-gray-400 text-sm">$10,000</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-700 rounded-lg p-4 mt-6">
+                                <h5 class="text-white font-semibold mb-2">投资组合分析</h5>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-300">预期年化收益</span>
+                                        <span class="text-green-400">+15.2%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-300">风险等级</span>
+                                        <span class="text-yellow-400">中等</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-300">夏普比率</span>
+                                        <span class="text-green-400">1.34</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 市场趋势预测 -->
+        <section class="mb-8 fade-in">
+            <div class="bg-gray-800 rounded-xl p-6 card-glow">
+                <h3 class="text-2xl font-bold text-white mb-6">市场趋势预测</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-3xl">📈</span>
+                        </div>
+                        <h4 class="text-xl font-bold text-green-400 mb-2">短期看涨</h4>
+                        <p class="text-gray-300 text-sm">
+                            基于技术指标和市场情绪分析，预计短期内市场将保持上涨趋势
+                        </p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-3xl">📊</span>
+                        </div>
+                        <h4 class="text-xl font-bold text-yellow-400 mb-2">中期震荡</h4>
+                        <p class="text-gray-300 text-sm">
+                            中期来看，市场可能在当前价位附近震荡整理，等待新的催化剂
+                        </p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-3xl">🚀</span>
+                        </div>
+                        <h4 class="text-xl font-bold text-blue-400 mb-2">长期看好</h4>
+                        <p class="text-gray-300 text-sm">
+                            长期来看，区块链技术的普及和机构采用将推动市场持续增长
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 风险提示 -->
+        <section class="fade-in">
+            <div class="bg-red-900 bg-opacity-30 border border-red-500 rounded-xl p-6">
+                <div class="flex items-start space-x-4">
+                    <div class="text-red-400 text-2xl">⚠️</div>
+                    <div>
+                        <h3 class="text-xl font-bold text-red-400 mb-2">投资风险提示</h3>
+                        <p class="text-gray-300 leading-relaxed">
+                            加密货币投资具有高风险性，价格波动剧烈。以上分析仅供参考，不构成投资建议。
+                            投资者应根据自身风险承受能力谨慎决策，建议分散投资以降低风险。
+                            过往表现不代表未来收益，投资前请充分了解相关风险。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-900 mt-16 py-8 border-t border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="flex items-center justify-center space-x-2 mb-4">
+                <div class="w-6 h-6 bg-gradient-to-r from-yellow-400 to-green-400 rounded-full flex items-center justify-center">
+                    <span class="text-black font-bold text-xs">₿</span>
+                </div>
+                <span class="text-lg font-bold gradient-text">CryptoMarket</span>
+            </div>
+            <p class="text-gray-400 text-sm">
+                © 2025 CryptoMarket. 专业的加密货币行情数据平台. 投资有风险，决策需谨慎.
+            </p>
+        </div>
+    </footer>
+
+    <script src="main.js"></script>
+    <script>
+        // 市场分析页面特定功能
+        let marketCapChart = null;
+        let volatilityChart = null;
+        let portfolioChart = null;
+        
+        function initializeAnalyticsPage() {
+            // 页面加载动画
+            anime({
+                targets: '.fade-in',
+                opacity: [0, 1],
+                translateY: [20, 0],
+                duration: 800,
+                delay: anime.stagger(100),
+                easing: 'easeOutQuart'
+            });
+            
+            // 初始化分析选项卡
+            initializeAnalysisTabs();
+            
+            // 初始化图表
+            initializeCharts();
+            
+            // 初始化相关性矩阵
+            initializeCorrelationMatrix();
+        }
+        
+        function initializeAnalysisTabs() {
+            const tabs = document.querySelectorAll('.analysis-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    showAnalysisContent(this.dataset.analysis);
+                });
+            });
+        }
+        
+        function showAnalysisContent(analysisType) {
+            // 隐藏所有内容
+            document.querySelectorAll('.analysis-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // 显示选中的内容
+            document.getElementById(analysisType + '-analysis').classList.remove('hidden');
+            
+            // 重新渲染相关图表
+            if (analysisType === 'market-cap') {
+                createMarketCapChart();
+            } else if (analysisType === 'volatility') {
+                createVolatilityChart();
+            } else if (analysisType === 'portfolio') {
+                createPortfolioChart();
+            }
+        }
+        
+        function initializeCharts() {
+            createMarketCapChart();
+            createVolatilityChart();
+            createPortfolioChart();
+        }
+        
+        function createMarketCapChart() {
+            const chartElement = document.getElementById('market-cap-chart');
+            if (!chartElement) return;
+
+            if (marketCapChart) {
+                marketCapChart.dispose();
+            }
+
+            marketCapChart = echarts.init(chartElement);
+            
+            const data = [
+                { value: 2355.5, name: 'Bitcoin' },
+                { value: 435, name: 'Ethereum' },
+                { value: 192, name: 'XRP' },
+                { value: 162, name: 'Tether' },
+                { value: 108, name: 'BNB' },
+                { value: 102, name: 'Solana' },
+                { value: 65, name: 'USDC' },
+                { value: 200, name: '其他' }
+            ];
+            
+            const option = {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: '#1a1f2e',
+                    borderColor: '#f7931a',
+                    textStyle: { color: '#ffffff' },
+                    formatter: '{a} <br/>{b}: ${c}B ({d}%)'
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 'left',
+                    textStyle: { color: '#ffffff' }
+                },
+                series: [{
+                    name: '市值分布',
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    center: ['60%', '50%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#1a1f2e',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: false,
+                        position: 'center'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: '18',
+                            fontWeight: 'bold',
+                            color: '#ffffff'
+                        }
+                    },
+                    labelLine: {
+                        show: false
+                    },
+                    data: data,
+                    color: ['#f7931a', '#627eea', '#00d4aa', '#26a17b', '#f3ba2f', '#9945ff', '#2775ca', '#8c8c8c']
+                }]
+            };
+
+            marketCapChart.setOption(option);
+        }
+        
+        function createVolatilityChart() {
+            const chartElement = document.getElementById('volatility-chart');
+            if (!chartElement) return;
+
+            if (volatilityChart) {
+                volatilityChart.dispose();
+            }
+
+            volatilityChart = echarts.init(chartElement);
+            
+            const option = {
+                backgroundColor: 'transparent',
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['BTC', 'ETH', 'BNB', 'SOL', 'ADA', 'DOGE', 'XRP', 'TRX'],
+                    axisLine: { lineStyle: { color: '#2d3748' } },
+                    axisLabel: { color: '#a0aec0' }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '波动率 (%)',
+                    axisLine: { lineStyle: { color: '#2d3748' } },
+                    axisLabel: { color: '#a0aec0' },
+                    splitLine: { lineStyle: { color: '#2d3748', opacity: 0.3 } }
+                },
+                series: [{
+                    data: [32.4, 45.8, 52.1, 67.3, 48.6, 89.2, 41.7, 38.9],
+                    type: 'bar',
+                    itemStyle: {
+                        color: function(params) {
+                            const colors = ['#48bb78', '#f7931a', '#f56565'];
+                            if (params.value < 40) return colors[0];
+                            if (params.value < 60) return colors[1];
+                            return colors[2];
+                        }
+                    },
+                    barWidth: '60%'
+                }],
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: '#1a1f2e',
+                    borderColor: '#f7931a',
+                    textStyle: { color: '#ffffff' },
+                    formatter: function(params) {
+                        const data = params[0];
+                        return `${data.axisValue}<br/>波动率: ${data.value}%`;
+                    }
+                }
+            };
+
+            volatilityChart.setOption(option);
+        }
+        
+        function createPortfolioChart() {
+            const chartElement = document.getElementById('portfolio-chart');
+            if (!chartElement) return;
+
+            if (portfolioChart) {
+                portfolioChart.dispose();
+            }
+
+            portfolioChart = echarts.init(chartElement);
+            
+            const data = [
+                { value: 40, name: 'Bitcoin (BTC)' },
+                { value: 25, name: 'Ethereum (ETH)' },
+                { value: 15, name: 'Solana (SOL)' },
+                { value: 10, name: 'Cardano (ADA)' },
+                { value: 10, name: '其他币种' }
+            ];
+            
+            const option = {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: '#1a1f2e',
+                    borderColor: '#f7931a',
+                    textStyle: { color: '#ffffff' },
+                    formatter: '{a} <br/>{b}: {c}% ({d}%)'
+                },
+                series: [{
+                    name: '投资组合',
+                    type: 'pie',
+                    radius: '70%',
+                    center: ['50%', '50%'],
+                    data: data,
+                    itemStyle: {
+                        borderRadius: 5,
+                        borderColor: '#1a1f2e',
+                        borderWidth: 2
+                    },
+                    label: {
+                        color: '#ffffff'
+                    },
+                    color: ['#f7931a', '#627eea', '#9945ff', '#0033ad', '#8c8c8c']
+                }]
+            };
+
+            portfolioChart.setOption(option);
+        }
+        
+        function initializeCorrelationMatrix() {
+            const matrix = document.querySelector('.correlation-matrix');
+            if (!matrix) return;
+            
+            const coins = ['BTC', 'ETH', 'BNB', 'SOL'];
+            const correlationData = [
+                [1.00, 0.85, 0.72, 0.68],
+                [0.85, 1.00, 0.78, 0.75],
+                [0.72, 0.78, 1.00, 0.82],
+                [0.68, 0.75, 0.82, 1.00]
+            ];
+            
+            matrix.innerHTML = '';
+            
+            // 添加表头
+            coins.forEach(coin => {
+                const header = document.createElement('div');
+                header.className = 'correlation-cell bg-gray-600 text-white';
+                header.textContent = coin;
+                matrix.appendChild(header);
+            });
+            
+            // 添加数据
+            correlationData.forEach((row, i) => {
+                // 行标题
+                const rowHeader = document.createElement('div');
+                rowHeader.className = 'correlation-cell bg-gray-600 text-white';
+                rowHeader.textContent = coins[i];
+                matrix.appendChild(rowHeader);
+                
+                // 数据单元格
+                row.forEach(value => {
+                    const cell = document.createElement('div');
+                    cell.className = 'correlation-cell';
+                    
+                    // 根据相关性值设置颜色
+                    if (value > 0.8) {
+                        cell.style.backgroundColor = 'rgba(72, 187, 120, 0.8)';
+                        cell.style.color = 'white';
+                    } else if (value > 0.6) {
+                        cell.style.backgroundColor = 'rgba(247, 147, 26, 0.8)';
+                        cell.style.color = 'white';
+                    } else if (value > 0.3) {
+                        cell.style.backgroundColor = 'rgba(160, 174, 192, 0.8)';
+                        cell.style.color = 'white';
+                    } else {
+                        cell.style.backgroundColor = 'rgba(245, 101, 101, 0.8)';
+                        cell.style.color = 'white';
+                    }
+                    
+                    cell.textContent = value.toFixed(2);
+                    matrix.appendChild(cell);
+                });
+            });
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initializeAnalyticsPage);
+    </script>
+</body>
+</html>

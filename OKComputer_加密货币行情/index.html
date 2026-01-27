@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoMarket - 实时加密货币行情</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a1f2e 100%);
+            min-height: 100vh;
+        }
+        
+        .hero-bg {
+            background: url('resources/crypto-hero.jpg') center/cover no-repeat;
+            position: relative;
+        }
+        
+        .hero-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 14, 26, 0.7);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #f7931a 0%, #00d4aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .card-glow {
+            box-shadow: 0 0 20px rgba(247, 147, 26, 0.1);
+            border: 1px solid rgba(247, 147, 26, 0.2);
+        }
+        
+        .pulse-glow {
+            animation: pulse-glow 2s infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(247, 147, 26, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(247, 147, 26, 0.6); }
+        }
+        
+        .fade-in {
+            opacity: 0;
+        }
+        
+        .price-number {
+            font-family: 'Courier New', monospace;
+        }
+        
+        .time-range-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .time-range-btn.active {
+            background: linear-gradient(135deg, #f7931a 0%, #00d4aa 100%);
+            color: white;
+        }
+        
+        .coin-card:hover {
+            transform: translateY(-2px);
+            transition: transform 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: #f7931a;
+            transition: color 0.3s ease;
+        }
+        
+        .chart-container {
+            background: rgba(26, 31, 46, 0.8);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- 导航栏 -->
+    <nav class="bg-gray-900 bg-opacity-90 backdrop-blur-md fixed w-full top-0 z-50 border-b border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-r from-yellow-400 to-green-400 rounded-full flex items-center justify-center">
+                        <span class="text-black font-bold text-sm">₿</span>
+                    </div>
+                    <span class="text-xl font-bold gradient-text">CryptoMarket</span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="nav-link text-white font-medium">行情首页</a>
+                    <a href="coins.html" class="nav-link text-gray-300 hover:text-white">币种详情</a>
+                    <a href="exchanges.html" class="nav-link text-gray-300 hover:text-white">交易所</a>
+                    <a href="analytics.html" class="nav-link text-gray-300 hover:text-white">市场分析</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="w-2 h-2 bg-green-400 rounded-full pulse-glow"></div>
+                    <span class="text-sm text-gray-400">实时更新</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 英雄区域 -->
+    <section class="hero-bg h-64 flex items-center justify-center relative mt-16">
+        <div class="text-center z-10 fade-in">
+            <h1 class="text-5xl md:text-6xl font-bold mb-4">
+                <span class="gradient-text">实时加密货币</span><br>
+                <span class="text-white">行情中心</span>
+            </h1>
+            <p class="text-xl text-gray-300 max-w-2xl mx-auto">
+                专业的数字货币交易平台，提供实时行情数据、深度分析和市场洞察
+            </p>
+        </div>
+    </section>
+
+    <!-- 主要内容区域 -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 行情概览面板 -->
+        <section class="mb-12 fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- 币种选择器和当前价格 -->
+                <div class="lg:col-span-2">
+                    <div class="bg-gray-800 rounded-xl p-6 card-glow">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-2xl font-bold text-white">实时行情</h2>
+                            <select id="coin-selector" class="bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 focus:border-yellow-400 focus:outline-none">
+                                <!-- 动态填充选项 -->
+                            </select>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div class="text-center">
+                                <div class="text-gray-400 text-sm mb-1">当前价格</div>
+                                <div id="current-price" class="text-2xl font-bold price-number">$0.00</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-gray-400 text-sm mb-1">24h涨跌</div>
+                                <div id="price-change" class="text-lg font-medium">0.00%</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-gray-400 text-sm mb-1">市值</div>
+                                <div id="market-cap" class="text-lg font-medium">$0</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-gray-400 text-sm mb-1">24h交易量</div>
+                                <div id="volume-24h" class="text-lg font-medium">$0</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 价格走势图 -->
+                        <div class="chart-container rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-white">价格走势</h3>
+                                <div class="flex space-x-2">
+                                    <button class="time-range-btn active px-3 py-1 rounded text-sm bg-gray-700">24H</button>
+                                    <button class="time-range-btn px-3 py-1 rounded text-sm bg-gray-700">7D</button>
+                                    <button class="time-range-btn px-3 py-1 rounded text-sm bg-gray-700">30D</button>
+                                    <button class="time-range-btn px-3 py-1 rounded text-sm bg-gray-700">1Y</button>
+                                </div>
+                            </div>
+                            <div id="price-chart" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 热门币种列表 -->
+                <div class="space-y-6">
+                    <div class="bg-gray-800 rounded-xl p-6 card-glow">
+                        <h3 class="text-xl font-bold text-white mb-4">热门币种</h3>
+                        <div id="top-coins-list" class="space-y-3">
+                            <!-- 动态填充热门币种 -->
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-800 rounded-xl p-6 card-glow">
+                        <h3 class="text-xl font-bold text-white mb-4">市场概览</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400">总市值</span>
+                                <span class="text-white font-medium">$3.2T</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400">BTC占比</span>
+                                <span class="text-white font-medium">62.1%</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400">活跃币种</span>
+                                <span class="text-white font-medium">2.4M+</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400">24h交易量</span>
+                                <span class="text-white font-medium">$89.5B</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 币种对比工具 -->
+        <section class="mb-12 fade-in">
+            <div class="bg-gray-800 rounded-xl p-6 card-glow">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-white">币种对比</h2>
+                    <div id="comparison-selectors" class="flex space-x-2">
+                        <!-- 动态填充对比选择器 -->
+                    </div>
+                </div>
+                
+                <div class="chart-container rounded-lg p-4">
+                    <div id="comparison-chart" style="height: 400px;"></div>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <p class="text-gray-400 text-sm">
+                        选择不同币种进行价格走势对比，支持多币种同时比较
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 快速交易区域 -->
+        <section class="mb-12 fade-in">
+            <div class="bg-gradient-to-r from-yellow-600 to-green-600 rounded-xl p-8 text-center">
+                <h2 class="text-3xl font-bold text-white mb-4">开始您的加密货币之旅</h2>
+                <p class="text-xl text-white mb-6 opacity-90">
+                    获取实时行情数据，做出明智的投资决策
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="coins.html" class="bg-white text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                        查看币种详情
+                    </a>
+                    <a href="exchanges.html" class="bg-gray-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors">
+                        选择交易所
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 功能特色 -->
+        <section class="fade-in">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center p-6">
+                    <div class="w-16 h-16 bg-gradient-to-r from-yellow-400 to-green-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">📊</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">实时数据</h3>
+                    <p class="text-gray-400">
+                        提供准确的实时价格、交易量和市场数据，助您把握每一个投资机会
+                    </p>
+                </div>
+                
+                <div class="text-center p-6">
+                    <div class="w-16 h-16 bg-gradient-to-r from-yellow-400 to-green-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">🔍</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">深度分析</h3>
+                    <p class="text-gray-400">
+                        专业的技术分析工具和市场洞察，帮助您做出更明智的投资决策
+                    </p>
+                </div>
+                
+                <div class="text-center p-6">
+                    <div class="w-16 h-16 bg-gradient-to-r from-yellow-400 to-green-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">🚀</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">全面覆盖</h3>
+                    <p class="text-gray-400">
+                        涵盖全球主要交易所和数千种加密货币，为您提供完整的市场视角
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-900 mt-16 py-8 border-t border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="flex items-center justify-center space-x-2 mb-4">
+                <div class="w-6 h-6 bg-gradient-to-r from-yellow-400 to-green-400 rounded-full flex items-center justify-center">
+                    <span class="text-black font-bold text-xs">₿</span>
+                </div>
+                <span class="text-lg font-bold gradient-text">CryptoMarket</span>
+            </div>
+            <p class="text-gray-400 text-sm">
+                © 2025 CryptoMarket. 专业的加密货币行情数据平台. 投资有风险，决策需谨慎.
+            </p>
+        </div>
+    </footer>
+
+    <script src="main.js"></script>
+</body>
+</html>

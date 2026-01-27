@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交易所 - CryptoMarket</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a1f2e 100%);
+            min-height: 100vh;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #f7931a 0%, #00d4aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .card-glow {
+            box-shadow: 0 0 20px rgba(247, 147, 26, 0.1);
+            border: 1px solid rgba(247, 147, 26, 0.2);
+        }
+        
+        .pulse-glow {
+            animation: pulse-glow 2s infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(247, 147, 26, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(247, 147, 26, 0.6); }
+        }
+        
+        .fade-in {
+            opacity: 0;
+        }
+        
+        .nav-link:hover {
+            color: #f7931a;
+            transition: color 0.3s ease;
+        }
+        
+        .exchange-card:hover {
+            transform: translateY(-4px);
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(247, 147, 26, 0.2);
+        }
+        
+        .filter-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .filter-btn.active {
+            background: linear-gradient(135deg, #f7931a 0%, #00d4aa 100%);
+            color: white;
+        }
+        
+        .security-score {
+            background: linear-gradient(135deg, rgba(72, 187, 120, 0.2) 0%, rgba(72, 187, 120, 0.1) 100%);
+            border: 1px solid rgba(72, 187, 120, 0.3);
+        }
+        
+        .volume-bar {
+            background: linear-gradient(90deg, #f7931a 0%, #00d4aa 100%);
+            height: 8px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- 导航栏 -->
+    <nav class="bg-gray-900 bg-opacity-90 backdrop-blur-md fixed w-full top-0 z-50 border-b border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-r from-yellow-400 to-green-400 rounded-full flex items-center justify-center">
+                        <span class="text-black font-bold text-sm">₿</span>
+                    </div>
+                    <span class="text-xl font-bold gradient-text">CryptoMarket</span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="nav-link text-gray-300 hover:text-white">行情首页</a>
+                    <a href="coins.html" class="nav-link text-gray-300 hover:text-white">币种详情</a>
+                    <a href="exchanges.html" class="nav-link text-white font-medium">交易所</a>
+                    <a href="analytics.html" class="nav-link text-gray-300 hover:text-white">市场分析</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="w-2 h-2 bg-green-400 rounded-full pulse-glow"></div>
+                    <span class="text-sm text-gray-400">实时更新</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
+        <!-- 页面标题和简介 -->
+        <section class="mb-8 fade-in">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold gradient-text mb-4">加密货币交易所</h1>
+                <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                    比较全球顶级加密货币交易所，找到最适合您交易需求的平台
+                </p>
+            </div>
+        </section>
+
+        <!-- 筛选和排序工具 -->
+        <section class="mb-8 fade-in">
+            <div class="bg-gray-800 rounded-xl p-6 card-glow">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                    <div class="flex flex-wrap gap-3">
+                        <span class="text-gray-400 font-medium">筛选条件:</span>
+                        <button class="filter-btn active px-4 py-2 rounded-lg bg-gray-700 text-white" data-filter="all">全部</button>
+                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-700 text-white" data-filter="high-volume">高交易量</button>
+                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-700 text-white" data-filter="low-fee">低手续费</button>
+                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-700 text-white" data-filter="beginner">新手友好</button>
+                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-700 text-white" data-filter="advanced">专业交易</button>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-gray-400">排序:</span>
+                        <select id="sort-select" class="bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 focus:border-yellow-400 focus:outline-none">
+                            <option value="volume">按交易量</option>
+                            <option value="security">按安全性</option>
+                            <option value="fee">按手续费</option>
+                            <option value="pairs">按交易对数量</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 交易所列表 -->
+        <section class="mb-8 fade-in">
+            <div id="exchange-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 动态填充交易所卡片 -->
+            </div>
+        </section>
+
+        <!-- 交易所对比工具 -->
+        <section class="mb-8 fade-in">
+            <div class="bg-gray-800 rounded-xl p-6 card-glow">
+                <h3 class="text-2xl font-bold text-white mb-6">交易所对比</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="comparison-tool">
+                    <div class="text-center py-8 border-2 border-dashed border-gray-600 rounded-lg">
+                        <div class="text-gray-400 mb-2">选择第一个交易所</div>
+                        <button class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors" onclick="selectForComparison(0)">
+                            选择交易所
+                        </button>
+                    </div>
+                    <div class="text-center py-8 border-2 border-dashed border-gray-600 rounded-lg">
+                        <div class="text-gray-400 mb-2">选择第二个交易所</div>
+                        <button class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors" onclick="selectForComparison(1)">
+                            选择交易所
+                        </button>
+                    </div>
+                    <div class="text-center py-8 border-2 border-dashed border-gray-600 rounded-lg">
+                        <div class="text-gray-400 mb-2">选择第三个交易所</div>
+                        <button class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors" onclick="selectForComparison(2)">
+                            选择交易所
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-6 text-center">
+                    <button id="compare-btn" class="bg-green-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        开始对比
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 交易指南 -->
+        <section class="fade-in">
+            <div class="bg-gradient-to-r from-yellow-600 to-green-600 rounded-xl p-8">
+                <h3 class="text-3xl font-bold text-white mb-4">如何选择合适的交易所</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl">🔒</span>
+                        </div>
+                        <h4 class="text-xl font-bold text-white mb-2">安全性</h4>
+                        <p class="text-white opacity-90">
+                            选择有良好安全记录、提供保险保障和冷存储的交易所
+                        </p>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl">💰</span>
+                        </div>
+                        <h4 class="text-xl font-bold text-white mb-2">费用结构</h4>
+                        <p class="text-white opacity-90">
+                            比较交易手续费、提现费用和隐藏成本，选择性价比高的平台
+                        </p>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl">🌟</span>
+                        </div>
+                        <h4 class="text-xl font-bold text-white mb-2">用户体验</h4>
+                        <p class="text-white opacity-90">
+                            考虑界面友好度、客服质量和可用的交易工具
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-900 mt-16 py-8 border-t border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="flex items-center justify-center space-x-2 mb-4">
+                <div class="w-6 h-6 bg-gradient-to-r from-yellow-400 to-green-400 rounded-full flex items-center justify-center">
+                    <span class="text-black font-bold text-xs">₿</span>
+                </div>
+                <span class="text-lg font-bold gradient-text">CryptoMarket</span>
+            </div>
+            <p class="text-gray-400 text-sm">
+                © 2025 CryptoMarket. 专业的加密货币行情数据平台. 投资有风险，决策需谨慎.
+            </p>
+        </div>
+    </footer>
+
+    <!-- 交易所选择模态框 -->
+    <div id="exchange-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold text-white mb-4">选择交易所</h3>
+            <div id="exchange-options" class="space-y-2 max-h-60 overflow-y-auto">
+                <!-- 动态填充交易所选项 -->
+            </div>
+            <div class="mt-6 flex space-x-4">
+                <button onclick="closeExchangeModal()" class="flex-1 bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                    取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+    <script>
+        // 交易所页面特定功能
+        let selectedExchanges = [null, null, null];
+        let currentComparisonSlot = 0;
+        
+        function initializeExchangePage() {
+            // 页面加载动画
+            anime({
+                targets: '.fade-in',
+                opacity: [0, 1],
+                translateY: [20, 0],
+                duration: 800,
+                delay: anime.stagger(100),
+                easing: 'easeOutQuart'
+            });
+            
+            // 初始化筛选器事件
+            initializeFilters();
+            
+            // 初始化排序功能
+            initializeSorting();
+        }
+        
+        function initializeFilters() {
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    filterExchanges(this.dataset.filter);
+                });
+            });
+        }
+        
+        function initializeSorting() {
+            const sortSelect = document.getElementById('sort-select');
+            sortSelect.addEventListener('change', function() {
+                sortExchanges(this.value);
+            });
+        }
+        
+        function filterExchanges(filter) {
+            // 这里可以实现筛选逻辑
+            console.log('筛选条件:', filter);
+            updateExchangeList();
+        }
+        
+        function sortExchanges(sortBy) {
+            // 这里可以实现排序逻辑
+            console.log('排序方式:', sortBy);
+            updateExchangeList();
+        }
+        
+        function selectForComparison(slot) {
+            currentComparisonSlot = slot;
+            showExchangeModal();
+        }
+        
+        function showExchangeModal() {
+            const modal = document.getElementById('exchange-modal');
+            const options = document.getElementById('exchange-options');
+            
+            options.innerHTML = '';
+            exchangeData.forEach((exchange, index) => {
+                const option = document.createElement('div');
+                option.className = 'flex items-center justify-between p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors';
+                option.innerHTML = `
+                    <div>
+                        <div class="text-white font-medium">${exchange.name}</div>
+                        <div class="text-gray-400 text-sm">24h: ${formatVolume(exchange.volume24h)}</div>
+                    </div>
+                    <div class="text-yellow-400">选择</div>
+                `;
+                option.addEventListener('click', () => selectExchange(index));
+                options.appendChild(option);
+            });
+            
+            modal.classList.remove('hidden');
+        }
+        
+        function selectExchange(exchangeIndex) {
+            selectedExchanges[currentComparisonSlot] = exchangeData[exchangeIndex];
+            updateComparisonTool();
+            closeExchangeModal();
+        }
+        
+        function closeExchangeModal() {
+            document.getElementById('exchange-modal').classList.add('hidden');
+        }
+        
+        function updateComparisonTool() {
+            const tool = document.getElementById('comparison-tool');
+            const compareBtn = document.getElementById('compare-btn');
+            
+            selectedExchanges.forEach((exchange, index) => {
+                const slot = tool.children[index];
+                if (exchange) {
+                    slot.innerHTML = `
+                        <div class="text-center">
+                            <h4 class="text-white font-bold text-lg mb-2">${exchange.name}</h4>
+                            <div class="text-gray-400 text-sm mb-4">24h交易量: ${formatVolume(exchange.volume24h)}</div>
+                            <button onclick="removeComparison(${index})" class="text-red-400 hover:text-red-300 text-sm">
+                                移除
+                            </button>
+                        </div>
+                    `;
+                }
+            });
+            
+            // 检查是否至少选择了两个交易所
+            const validSelections = selectedExchanges.filter(e => e !== null);
+            compareBtn.disabled = validSelections.length < 2;
+        }
+        
+        function removeComparison(index) {
+            selectedExchanges[index] = null;
+            const tool = document.getElementById('comparison-tool');
+            const slot = tool.children[index];
+            slot.innerHTML = `
+                <div class="text-center py-8 border-2 border-dashed border-gray-600 rounded-lg">
+                    <div class="text-gray-400 mb-2">选择第${index + 1}个交易所</div>
+                    <button class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors" onclick="selectForComparison(${index})">
+                        选择交易所
+                    </button>
+                </div>
+            `;
+            updateComparisonTool();
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initializeExchangePage);
+    </script>
+</body>
+</html>

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>币种详情 - CryptoMarket</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a1f2e 100%);
+            min-height: 100vh;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #f7931a 0%, #00d4aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .card-glow {
+            box-shadow: 0 0 20px rgba(247, 147, 26, 0.1);
+            border: 1px solid rgba(247, 147, 26, 0.2);
+        }
+        
+        .pulse-glow {
+            animation: pulse-glow 2s infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(247, 147, 26, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(247, 147, 26, 0.6); }
+        }
+        
+        .fade-in {
+            opacity: 0;
+        }
+        
+        .price-number {
+            font-family: 'Courier New', monospace;
+        }
+        
+        .nav-link:hover {
+            color: #f7931a;
+            transition: color 0.3s ease;
+        }
+        
+        .chart-container {
+            background: rgba(26, 31, 46, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, rgba(247, 147, 26, 0.1) 0%, rgba(0, 212, 170, 0.1) 100%);
+            border: 1px solid rgba(247, 147, 26, 0.2);
+        }
+        
+        .indicator-buy {
+            color: #48bb78;
+        }
+        
+        .indicator-sell {
+            color: #f56565;
+        }
+        
+        .indicator-neutral {
+            color: #a0aec0;
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- 导航栏 -->
+    <nav class="bg-gray-900 bg-opacity-90 backdrop-blur-md fixed w-full top-0 z-50 border-b border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-r from-yellow-400 to-green-400 rounded-full flex items-center justify-center">
+                        <span class="text-black font-bold text-sm">₿</span>
+                    </div>
+                    <span class="text-xl font-bold gradient-text">CryptoMarket</span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="nav-link text-gray-300 hover:text-white">行情首页</a>
+                    <a href="coins.html" class="nav-link text-white font-medium">币种详情</a>
+                    <a href="exchanges.html" class="nav-link text-gray-300 hover:text-white">交易所</a>
+                    <a href="analytics.html" class="nav-link text-gray-300 hover:text-white">市场分析</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="w-2 h-2 bg-green-400 rounded-full pulse-glow"></div>
+                    <span class="text-sm text-gray-400">实时更新</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
+        <!-- 币种基本信息 -->
+        <section class="mb-8 fade-in">
+            <div class="bg-gray-800 rounded-xl p-6 card-glow">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 bg-gradient-to-r from-yellow-400 to-green-400 rounded-full flex items-center justify-center">
+                            <span class="text-2xl font-bold text-black" id="coin-symbol">BTC</span>
+                        </div>
+                        <div>
+                            <h1 class="text-3xl font-bold text-white" id="coin-name">Bitcoin</h1>
+                            <p class="text-gray-400">数字黄金，加密货币的鼻祖</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-4xl font-bold price-number gradient-text" id="detail-price">$112,384.50</div>
+                        <div class="text-lg" id="detail-change">+2.34%</div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div class="metric-card rounded-lg p-4">
+                        <div class="text-gray-400 text-sm mb-1">市值排名</div>
+                        <div class="text-white font-bold text-xl">#1</div>
+                    </div>
+                    <div class="metric-card rounded-lg p-4">
+                        <div class="text-gray-400 text-sm mb-1">24h交易量</div>
+                        <div class="text-white font-bold text-xl" id="detail-volume">$45.8B</div>
+                    </div>
+                    <div class="metric-card rounded-lg p-4">
+                        <div class="text-gray-400 text-sm mb-1">流通供应量</div>
+                        <div class="text-white font-bold text-xl">19.8M BTC</div>
+                    </div>
+                    <div class="metric-card rounded-lg p-4">
+                        <div class="text-gray-400 text-sm mb-1">最大供应量</div>
+                        <div class="text-white font-bold text-xl">21M BTC</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 价格图表和技术分析 -->
+        <section class="mb-8 fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- 价格图表 -->
+                <div class="lg:col-span-2">
+                    <div class="bg-gray-800 rounded-xl p-6 card-glow">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-2xl font-bold text-white">价格走势</h2>
+                            <div class="flex space-x-2">
+                                <button class="time-range-btn active px-4 py-2 rounded text-sm bg-gray-700">1小时</button>
+                                <button class="time-range-btn px-4 py-2 rounded text-sm bg-gray-700">24小时</button>
+                                <button class="time-range-btn px-4 py-2 rounded text-sm bg-gray-700">7天</button>
+                                <button class="time-range-btn px-4 py-2 rounded text-sm bg-gray-700">30天</button>
+                                <button class="time-range-btn px-4 py-2 rounded text-sm bg-gray-700">1年</button>
+                            </div>
+                        </div>
+                        <div class="chart-container rounded-lg p-4">
+                            <div id="detail-chart" style="height: 400px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 技术指标 -->
+                <div class="space-y-6">
+                    <div class="bg-gray-800 rounded-xl p-6 card-glow">
+                        <h3 class="text-xl font-bold text-white mb-4">技术指标</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400">RSI (14)</span>
+                                <span class="text-white font-medium indicator-buy">65.2 (买入)</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400">MACD</span>
+                                <span class="text-white font-medium indicator-buy">看涨</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400">移动平均线</span>
+                                <span class="text-white font-medium indicator-buy">看涨</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400">布林带</span>
+                                <span class="text-white font-medium indicator-neutral">中性</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400">支撑位</span>
+                                <span class="text-white font-medium">$108,500</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400">阻力位</span>
+                                <span class="text-white font-medium">$118,200</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-800 rounded-xl p-6 card-glow">
+                        <h3 class="text-xl font-bold text-white mb-4">市场情绪</h3>
+                        <div class="text-center">
+                            <div class="w-24 h-24 mx-auto mb-4 bg-green-500 rounded-full flex items-center justify-center">
+                                <span class="text-3xl">🐂</span>
+                            </div>
+                            <div class="text-green-400 font-bold text-lg">牛市</div>
+                            <div class="text-gray-400 text-sm mt-2">市场情绪指数: 72/100</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 市场统计和历史数据 -->
+        <section class="mb-8 fade-in">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- 市场统计 -->
+                <div class="bg-gray-800 rounded-xl p-6 card-glow">
+                    <h3 class="text-xl font-bold text-white mb-6">市场统计</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center py-3 border-b border-gray-700">
+                            <span class="text-gray-400">历史最高价</span>
+                            <span class="text-white font-medium">$124,000</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-700">
+                            <span class="text-gray-400">历史最低价</span>
+                            <span class="text-white font-medium">$0.04865</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-700">
+                            <span class="text-gray-400">ROI (投资回报率)</span>
+                            <span class="text-green-400 font-medium">+2,312,456%</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-700">
+                            <span class="text-gray-400">流通率</span>
+                            <span class="text-white font-medium">94.19%</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3">
+                            <span class="text-gray-400">完全稀释市值</span>
+                            <span class="text-white font-medium">$2.49T</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 历史价格数据 -->
+                <div class="bg-gray-800 rounded-xl p-6 card-glow">
+                    <h3 class="text-xl font-bold text-white mb-6">历史价格</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center py-3 border-b border-gray-700">
+                            <span class="text-gray-400">24小时最高</span>
+                            <span class="text-white font-medium">$115,200</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-700">
+                            <span class="text-gray-400">24小时最低</span>
+                            <span class="text-white font-medium">$110,800</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-700">
+                            <span class="text-gray-400">7天最高</span>
+                            <span class="text-white font-medium">$118,500</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-700">
+                            <span class="text-gray-400">7天最低</span>
+                            <span class="text-white font-medium">$108,200</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-700">
+                            <span class="text-gray-400">30天最高</span>
+                            <span class="text-white font-medium">$124,000</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3">
+                            <span class="text-gray-400">30天最低</span>
+                            <span class="text-white font-medium">$98,500</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 币种信息和相关链接 -->
+        <section class="mb-8 fade-in">
+            <div class="bg-gray-800 rounded-xl p-6 card-glow">
+                <h3 class="text-xl font-bold text-white mb-6">关于 Bitcoin</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-lg font-semibold text-white mb-4">项目介绍</h4>
+                        <p class="text-gray-300 leading-relaxed mb-4">
+                            Bitcoin (比特币) 是世界上第一个去中心化的数字货币，由中本聪在2009年创建。它基于区块链技术，
+                            允许用户在没有中介机构的情况下进行点对点交易。比特币的总供应量被限制在2100万枚，
+                            这种稀缺性使其被誉为"数字黄金"。
+                        </p>
+                        <p class="text-gray-300 leading-relaxed">
+                            作为加密货币市场的开创者，比特币不仅是一种支付工具，更成为了一种价值储存手段和对冲通胀的工具。
+                            其去中心化、透明和安全的特性使其在全球范围内获得了广泛的认可和应用。
+                        </p>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold text-white mb-4">关键信息</h4>
+                        <div class="space-y-3">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-gray-400">🔗</span>
+                                <a href="#" class="text-blue-400 hover:text-blue-300">官方网站</a>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="text-gray-400">📄</span>
+                                <a href="#" class="text-blue-400 hover:text-blue-300">白皮书</a>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="text-gray-400">🐦</span>
+                                <a href="#" class="text-blue-400 hover:text-blue-300">Twitter</a>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="text-gray-400">💬</span>
+                                <a href="#" class="text-blue-400 hover:text-blue-300">Reddit</a>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="text-gray-400">📊</span>
+                                <a href="#" class="text-blue-400 hover:text-blue-300">区块浏览器</a>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6">
+                            <h5 class="text-md font-semibold text-white mb-3">标签</h5>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="bg-yellow-600 text-white px-3 py-1 rounded-full text-sm">数字货币</span>
+                                <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm">价值储存</span>
+                                <span class="bg-green-600 text-white px-3 py-1 rounded-full text-sm">去中心化</span>
+                                <span class="bg-purple-600 text-white px-3 py-1 rounded-full text-sm">PoW</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 相关币种推荐 -->
+        <section class="fade-in">
+            <h3 class="text-2xl font-bold text-white mb-6">相关币种</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-gray-800 rounded-xl p-6 card-glow hover:bg-gray-700 cursor-pointer transition-colors">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                            <span class="text-white font-bold">E</span>
+                        </div>
+                        <div>
+                            <div class="text-white font-semibold">Ethereum</div>
+                            <div class="text-gray-400 text-sm">ETH</div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-white font-medium">$4,091.20</span>
+                        <span class="text-red-400 text-sm">-1.23%</span>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 rounded-xl p-6 card-glow hover:bg-gray-700 cursor-pointer transition-colors">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
+                            <span class="text-white font-bold">B</span>
+                        </div>
+                        <div>
+                            <div class="text-white font-semibold">BNB</div>
+                            <div class="text-gray-400 text-sm">BNB</div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-white font-medium">$1,478.30</span>
+                        <span class="text-green-400 text-sm">+1.89%</span>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 rounded-xl p-6 card-glow hover:bg-gray-700 cursor-pointer transition-colors">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                            <span class="text-white font-bold">S</span>
+                        </div>
+                        <div>
+                            <div class="text-white font-semibold">Solana</div>
+                            <div class="text-gray-400 text-sm">SOL</div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-white font-medium">$198.45</span>
+                        <span class="text-red-400 text-sm">-3.45%</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-900 mt-16 py-8 border-t border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="flex items-center justify-center space-x-2 mb-4">
+                <div class="w-6 h-6 bg-gradient-to-r from-yellow-400 to-green-400 rounded-full flex items-center justify-center">
+                    <span class="text-black font-bold text-xs">₿</span>
+                </div>
+                <span class="text-lg font-bold gradient-text">CryptoMarket</span>
+            </div>
+            <p class="text-gray-400 text-sm">
+                © 2025 CryptoMarket. 专业的加密货币行情数据平台. 投资有风险，决策需谨慎.
+            </p>
+        </div>
+    </footer>
+
+    <script src="main.js"></script>
+    <script>
+        // 币种详情页特定功能
+        let detailChart = null;
+        
+        function initializeDetailPage() {
+            // 初始化详情页图表
+            createDetailChart();
+            
+            // 页面加载动画
+            anime({
+                targets: '.fade-in',
+                opacity: [0, 1],
+                translateY: [20, 0],
+                duration: 800,
+                delay: anime.stagger(100),
+                easing: 'easeOutQuart'
+            });
+        }
+        
+        function createDetailChart() {
+            const chartElement = document.getElementById('detail-chart');
+            if (!chartElement) return;
+
+            if (detailChart) {
+                detailChart.dispose();
+            }
+
+            detailChart = echarts.init(chartElement);
+            
+            // 生成更详细的历史数据
+            const history = generateDetailedHistory();
+            
+            const option = {
+                backgroundColor: 'transparent',
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: history.map(h => h.date),
+                    axisLine: { lineStyle: { color: '#2d3748' } },
+                    axisLabel: { color: '#a0aec0' }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLine: { lineStyle: { color: '#2d3748' } },
+                    axisLabel: { 
+                        color: '#a0aec0',
+                        formatter: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    },
+                    splitLine: { lineStyle: { color: '#2d3748', opacity: 0.3 } }
+                },
+                series: [{
+                    data: history.map(h => h.price),
+                    type: 'line',
+                    smooth: true,
+                    lineStyle: {
+                        color: '#f7931a',
+                        width: 3
+                    },
+                    areaStyle: {
+                        color: {
+                            type: 'linear',
+                            x: 0, y: 0, x2: 0, y2: 1,
+                            colorStops: [
+                                { offset: 0, color: 'rgba(247, 147, 26, 0.3)' },
+                                { offset: 1, color: 'rgba(247, 147, 26, 0.05)' }
+                            ]
+                        }
+                    },
+                    symbol: 'none'
+                }],
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: '#1a1f2e',
+                    borderColor: '#f7931a',
+                    textStyle: { color: '#ffffff' },
+                    formatter: function(params) {
+                        const data = params[0];
+                        return `${data.axisValue}<br/>BTC: $${data.value.toLocaleString()}`;
+                    }
+                }
+            };
+
+            detailChart.setOption(option);
+        }
+        
+        function generateDetailedHistory() {
+            const history = [];
+            let currentPrice = 112384.50;
+            const now = new Date();
+            
+            for (let i = 365; i >= 0; i--) {
+                const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+                const change = (Math.random() - 0.5) * 0.03;
+                currentPrice = currentPrice * (1 + change);
+                history.push({
+                    date: date.toISOString().split('T')[0],
+                    price: currentPrice
+                });
+            }
+            return history;
+        }
+        
+        // 时间范围按钮事件
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDetailPage();
+            
+            const timeRangeButtons = document.querySelectorAll('.time-range-btn');
+            timeRangeButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    timeRangeButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    // 这里可以添加更新图表时间范围的逻辑
+                    createDetailChart();
+                });
+            });
+            
+            // 响应式图表调整
+            window.addEventListener('resize', function() {
+                if (detailChart) detailChart.resize();
+            });
+        });
+    </script>
+</body>
+</html>
