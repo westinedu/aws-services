@@ -1,0 +1,7 @@
+fastapi==0.115.8
+uvicorn[standard]==0.30.6
+yfinance==0.2.50
+pandas==2.2.3
+pandas_datareader==0.10.0
+boto3==1.35.27
+python-dateutil==2.9.0.post0
