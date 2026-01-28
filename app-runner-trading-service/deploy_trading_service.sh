@@ -18,7 +18,7 @@ APPRUNNER_INSTANCE_ROLE_NAME="${APPRUNNER_INSTANCE_ROLE_NAME:-apprunner-trading-
 
 # S3 config (bucket already exists)
 TRADING_S3_BUCKET="${TRADING_S3_BUCKET:-s3-trading-data-bucket}"
-TRADING_S3_PREFIX="${TRADING_S3_PREFIX:-trading}"
+TRADING_S3_PREFIX="${TRADING_S3_PREFIX:-US-stocks}"
 
 CPU="${CPU:-1 vCPU}"
 MEMORY="${MEMORY:-2 GB}"

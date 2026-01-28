@@ -52,7 +52,7 @@ def _s3_bucket() -> str:
 
 
 def _s3_prefix() -> str:
-    return (os.getenv("TRADING_S3_PREFIX") or "trading").strip().strip("/")
+    return (os.getenv("TRADING_S3_PREFIX") or "US-stocks").strip().strip("/")
 
 
 def _is_s3_enabled() -> bool:
@@ -68,13 +68,13 @@ def _s3_client():
 def _year_key(symbol: str, year: int) -> str:
     prefix = _s3_prefix()
     safe_symbol = symbol.upper().replace("/", "-")
-    return f"{prefix}/daily/symbol={safe_symbol}/year={year}.json"
+    return f"{prefix}/yearly/symbol={safe_symbol}/{safe_symbol}_{year}.json"
 
 
 def _manifest_key(symbol: str) -> str:
     prefix = _s3_prefix()
     safe_symbol = symbol.upper().replace("/", "-")
-    return f"{prefix}/daily/symbol={safe_symbol}/manifest.json"
+    return f"{prefix}/yearly/symbol={safe_symbol}/manifest.json"
 
 
 def _parse_date(s: str) -> datetime:
