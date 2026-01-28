@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import swaggerUi from "swagger-ui-express";
 import { z } from "zod";
 
 import { fetchDailySeriesWithFallback } from "./binance.js";
@@ -41,20 +42,68 @@ function isFresh(fetchedAtIso: string, maxAgeSeconds: number) {
 }
 
 app.get("/", (_req, res) => {
-  res.json({
-    service: "btc-mindmap",
-    endpoints: {
-      health: "/health",
-      daily: "GET /api/v1/daily?symbol=BTCUSDT&days=90&maxAgeSeconds=300",
-      refresh: "POST /api/v1/daily/refresh { symbol, days }",
-    },
-    note: "This service returns BTC/crypto daily candle series; no Swagger UI is bundled.",
-  });
+  res.redirect("/docs");
 });
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true, service: "btc-mindmap", ts: new Date().toISOString() });
 });
+
+const swaggerDoc = {
+  openapi: "3.0.1",
+  info: {
+    title: "BTC Mindmap Service",
+    version: "1.0.0",
+    description: "Daily candle data with optional S3 caching.",
+  },
+  servers: [{ url: "/" }],
+  paths: {
+    "/health": {
+      get: {
+        summary: "Health check",
+        responses: { 200: { description: "OK" } },
+      },
+    },
+    "/api/v1/daily": {
+      get: {
+        summary: "Get daily candles",
+        parameters: [
+          { name: "symbol", in: "query", schema: { type: "string", default: "BTCUSDT" } },
+          { name: "days", in: "query", schema: { type: "integer", minimum: 1, maximum: 365, default: 90 } },
+          {
+            name: "maxAgeSeconds",
+            in: "query",
+            schema: { type: "integer", minimum: 0, maximum: 86400, default: 300 },
+          },
+        ],
+        responses: { 200: { description: "Daily candles" }, 400: { description: "Invalid query" } },
+      },
+    },
+    "/api/v1/daily/refresh": {
+      post: {
+        summary: "Force refresh daily candles",
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  symbol: { type: "string", default: "BTCUSDT" },
+                  days: { type: "integer", minimum: 1, maximum: 365, default: 90 },
+                },
+              },
+            },
+          },
+        },
+        responses: { 200: { description: "Refreshed" }, 400: { description: "Invalid body" } },
+      },
+    },
+  },
+};
+
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDoc));
+app.get("/openapi.json", (_req, res) => res.json(swaggerDoc));
 
 /**
  * Get daily candles for last N days.
