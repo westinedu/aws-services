@@ -1,18 +1,18 @@
 # App Runner can build from a Dockerfile.
 
-FROM node:20-alpine AS deps
+FROM public.ecr.aws/docker/library/node:20-alpine AS deps
 WORKDIR /app
 COPY package.json ./
 RUN npm install --omit=dev
 
-FROM node:20-alpine AS build
+FROM public.ecr.aws/docker/library/node:20-alpine AS build
 WORKDIR /app
 COPY package.json tsconfig.json ./
 RUN npm install
 COPY src ./src
 RUN npm run build
 
-FROM node:20-alpine AS runner
+FROM public.ecr.aws/docker/library/node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=8080

@@ -17,7 +17,21 @@ function getPrefix() {
   return p;
 }
 
-export const s3 = new S3Client({ region: getRegion() });
+function getEndpoint() {
+  const v = (process.env.S3_ENDPOINT || "").trim();
+  return v || undefined;
+}
+
+function getForcePathStyle() {
+  const v = (process.env.S3_FORCE_PATH_STYLE || "").trim().toLowerCase();
+  return v === "1" || v === "true" || v === "yes";
+}
+
+export const s3Client = new S3Client({
+  region: getRegion(),
+  endpoint: getEndpoint(),
+  forcePathStyle: getForcePathStyle(),
+});
 
 function bodyToString(body: any): Promise<string> {
   if (!body) return Promise.resolve("");
@@ -39,7 +53,7 @@ export async function getDailySeriesFromS3(symbol: string, days: number): Promis
   const Key = dailySeriesKey(symbol, days);
 
   try {
-    const res = await s3.send(new GetObjectCommand({ Bucket, Key }));
+    const res = await s3Client.send(new GetObjectCommand({ Bucket, Key }));
     const raw = await bodyToString(res.Body);
     if (!raw) return null;
     return JSON.parse(raw) as DailySeries;
@@ -55,7 +69,7 @@ export async function putDailySeriesToS3(series: DailySeries): Promise<{ bucket:
   const Bucket = getBucket();
   const Key = dailySeriesKey(series.symbol, series.days);
 
-  await s3.send(
+  await s3Client.send(
     new PutObjectCommand({
       Bucket,
       Key,

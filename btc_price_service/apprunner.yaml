@@ -1,0 +1,21 @@
+# AWS App Runner configuration file
+#
+# This YAML file defines how AWS App Runner should build and run the
+# application when deploying directly from source code.  It follows
+# the examples for Python services documented in community blogs and
+# workshops.  The file uses version 1.0 of the configuration schema
+# and specifies Python as the runtime.  Build commands install the
+# required packages from requirements.txt, and the application is
+# started with `python app.py` on port 8000.  If you choose to
+# deploy via a container image instead, this file is optional.
+
+version: 1.0
+runtime: python3
+build:
+  commands:
+    build:
+      - pip install -r requirements.txt
+run:
+  command: python app.py
+  network:
+    port: 8000

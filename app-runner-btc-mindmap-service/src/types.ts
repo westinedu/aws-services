@@ -9,7 +9,7 @@ export type DailyCandle = {
 };
 
 export type DailySeries = {
-  provider: "binance";
+  provider: "binance" | "binance-us" | "kraken" | "coinbase";
   symbol: string;
   interval: "1d";
   days: number;
