@@ -16,7 +16,9 @@ import argparse
 import json
 import os
 import sys
+from io import StringIO
 from typing import List, Set
+import warnings
 
 import pandas as pd
 import requests
@@ -29,6 +31,17 @@ WIKI_URLS = {
 
 
 def read_tables_via_requests(url: str, verify: bool) -> List[pd.DataFrame]:
+    if not verify:
+        # Suppress noisy warning when user intentionally disables TLS verification.
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            try:
+                import urllib3
+
+                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            except Exception:
+                pass
+
     headers = {
         "User-Agent": (
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -38,7 +51,8 @@ def read_tables_via_requests(url: str, verify: bool) -> List[pd.DataFrame]:
     }
     r = requests.get(url, timeout=20, verify=verify, headers=headers)
     r.raise_for_status()
-    return pd.read_html(r.text)
+    # Pandas is deprecating passing raw HTML strings directly.
+    return pd.read_html(StringIO(r.text))
 
 
 def fetch_tickers(verify_ssl: bool = True) -> List[str]:
@@ -96,7 +110,13 @@ def save_to_json(tickers: List[str], path: str) -> None:
 
 
 def upload_to_s3(file_path: str, bucket: str, object_name: str = None) -> None:
-    import boto3
+    try:
+        import boto3
+    except ModuleNotFoundError as exc:
+        raise ModuleNotFoundError(
+            "boto3 is required for uploading. Install deps with: pip install -r AWS/ticker-manager/requirements.txt "
+            "(or run the shell menu which auto-creates .venv)."
+        ) from exc
     if object_name is None:
         object_name = os.path.basename(file_path)
     s3 = boto3.client("s3")

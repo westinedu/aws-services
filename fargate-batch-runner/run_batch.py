@@ -90,6 +90,10 @@ def main() -> None:
 
     url = f"{base_url}/api/v1/stocks/refresh"
 
+    status_by_symbol = {}
+    failed_batches = []
+    started_at = time.time()
+
     print(
         json.dumps(
             {
@@ -123,11 +127,60 @@ def main() -> None:
         try:
             resp = requests.post(url, json=payload, timeout=timeout_seconds)
             print(resp.status_code, resp.text)
+            if resp.status_code == 200:
+                try:
+                    data = resp.json()
+                    results = data.get("results") if isinstance(data, dict) else None
+                    if isinstance(results, list) and results:
+                        for item in results:
+                            symbol = str(item.get("symbol", "")).strip().upper()
+                            if symbol:
+                                status_by_symbol[symbol] = "success"
+                        for symbol in batch:
+                            status_by_symbol.setdefault(symbol, "success")
+                    else:
+                        for symbol in batch:
+                            status_by_symbol[symbol] = "success"
+                except Exception:
+                    for symbol in batch:
+                        status_by_symbol[symbol] = "success"
+            else:
+                for symbol in batch:
+                    status_by_symbol[symbol] = "failed"
+                failed_batches.append(
+                    {
+                        "batch": batch,
+                        "status": resp.status_code,
+                        "error": resp.text[:500],
+                    }
+                )
         except Exception as exc:
-            print(f"Request failed for {batch}: {exc}")
+            for symbol in batch:
+                status_by_symbol[symbol] = "failed"
+            failed_batches.append(
+                {
+                    "batch": batch,
+                    "status": "request_failed",
+                    "error": str(exc)[:500],
+                }
+            )
 
         if sleep_seconds > 0:
             time.sleep(sleep_seconds)
+
+    total_symbols = len({s.strip().upper() for s in symbols if s.strip()})
+    success_symbols = [s for s, status in status_by_symbol.items() if status == "success"]
+    failed_symbols = [s for s, status in status_by_symbol.items() if status == "failed"]
+    summary = {
+        "total_symbols": total_symbols,
+        "success": len(success_symbols),
+        "failed": len(failed_symbols),
+        "failed_symbols": failed_symbols[:200],
+        "failed_batches": failed_batches,
+        "duration_seconds": round(time.time() - started_at, 2),
+    }
+    print("Batch summary:")
+    print(json.dumps(summary, ensure_ascii=False))
 
 
 if __name__ == "__main__":

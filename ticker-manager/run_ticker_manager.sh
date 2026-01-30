@@ -16,10 +16,21 @@ else
   PY="$(command -v python3 || command -v python)"
 fi
 
+ensure_venv() {
+  # Create venv + install requirements without sourcing.
+  if [ ! -x "$VENV_PY" ]; then
+    echo "Creating venv at $DIR/.venv"
+    "${PY}" -m venv "$DIR/.venv"
+  fi
+  echo "Installing Python deps into venv"
+  "$DIR/.venv/bin/pip" install -r "$DIR/requirements.txt" >/dev/null
+  PY="$VENV_PY"
+}
+
 # Presets -- edit here if you want different defaults
 OUTPUT="$DIR/us_tickers.json"
-BUCKET="my-default-bucket"
-OBJECT="tickers/us_tickers.json"
+BUCKET="s3-trading-data-bucket"
+OBJECT="config/us_tickers.json"
 INSECURE_FLAG="--insecure" # default: disable cert verification to avoid local SSL issues
 
 show_menu() {
@@ -61,12 +72,22 @@ case "$CMD" in
     ;;
   upload)
     echo "Uploading $OUTPUT -> s3://$BUCKET/$OBJECT"
-    "$PY" "$DIR/ticker_manager.py" --upload --output "$OUTPUT" --bucket "$BUCKET" --object "$OBJECT"
+    if command -v aws >/dev/null 2>&1; then
+      aws s3 cp "$OUTPUT" "s3://$BUCKET/$OBJECT"
+    else
+      ensure_venv
+      "$PY" "$DIR/ticker_manager.py" --upload --output "$OUTPUT" --bucket "$BUCKET" --object "$OBJECT"
+    fi
     ;;
   both)
     echo "Generating then uploading"
     "$PY" "$DIR/ticker_manager.py" --generate --output "$OUTPUT" $INSECURE_FLAG
-    "$PY" "$DIR/ticker_manager.py" --upload --output "$OUTPUT" --bucket "$BUCKET" --object "$OBJECT"
+    if command -v aws >/dev/null 2>&1; then
+      aws s3 cp "$OUTPUT" "s3://$BUCKET/$OBJECT"
+    else
+      ensure_venv
+      "$PY" "$DIR/ticker_manager.py" --upload --output "$OUTPUT" --bucket "$BUCKET" --object "$OBJECT"
+    fi
     ;;
   *)
     echo "Usage: $0 {generate|upload|both}"
